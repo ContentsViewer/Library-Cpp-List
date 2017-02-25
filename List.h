@@ -18,6 +18,8 @@ private:
 
     void Unallocate(TYPE *array);
 
+    int SortHelperPartition(int l, int r, int(*comparison)(TYPE, TYPE));
+
 public:
     int Count() { return count; }
     int Capacity() { return capacity; }
@@ -38,12 +40,14 @@ public:
     void Add(TYPE item);
     void Insert(int index, TYPE  item);
     int IndexOf(TYPE item);
+    int LastIndexOf(TYPE item);
     void CopyTo(int index, TYPE *array, int arrayIndex, int count);
     void RemoveAt(int index);
     bool Remove(TYPE item);
     void Clear();
     void CopyFrom(const List &from);
     void MoveFrom(TYPE *from, int size);
+    void Sort(int(*comparison)(TYPE, TYPE));
 
     void Trim();
 
@@ -272,6 +276,21 @@ int  List<TYPE>::IndexOf(TYPE item)
     return -1;
 }
 
+
+template <typename TYPE>
+int  List<TYPE>::LastIndexOf(TYPE item)
+{
+    for (int i = count - 1; i >= 0; i--)
+    {
+        if (array[i] == item)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 template <typename TYPE>
 bool  List<TYPE>::Remove(TYPE item)
 {
@@ -289,6 +308,109 @@ template<typename TYPE>
 void List<TYPE>::Trim()
 {
     SetCapacity(count);
+}
+
+template <typename TYPE>
+int List<TYPE>::SortHelperPartition(int l, int r, int(*comparison)(TYPE, TYPE))
+{
+    int i, j;
+    TYPE pivot;
+    TYPE temp;
+
+    i = l - 1;
+    j = r;
+
+    //一番右側を枢軸にする
+    pivot = array[r];
+
+    for (;;)
+    {
+        //ポインタiを右に進める
+        while (comparison(array[++i], pivot) < 0);
+
+        //ポインタjを左に進める
+        while (i < --j && comparison(pivot, array[j]) < 0);
+
+        //ポインタi, jがぶつかるときはループを抜ける
+        if (i >= j)
+        {
+            break;
+        }
+
+        //入れ替える
+        temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    //array[i]と枢軸を入れかえる
+    temp = array[i];
+    array[i] = array[r];
+    array[r] = temp;
+    return i;
+}
+
+//Comparisonについて:
+//  返り値:
+//      0より小さい:
+//          並び替え順序においてAはBの前
+//
+//      0:
+//          並び替え順序においてAとBは同じ位置
+//
+//      0より大きい:
+//          並び替え順序においてAはBの後ろ
+template <typename TYPE>
+void List<TYPE>::Sort(int(*comparison)(TYPE, TYPE))
+{
+    int l, r, v;
+    int low[30], high[30];
+    int sp;
+
+    //スタックを初期化する
+    low[0] = 0;
+    high[0] = count - 1;
+    sp = 1;
+
+    //スタックが空になるまで繰り返す
+    while (sp > 0)
+    {
+        //スタックから整列する範囲を取り出す
+        sp--;
+        l = low[sp];
+        r = high[sp];
+
+        //整列するよう要素が一つなら何もしない
+        if (l >= r)
+        {
+
+        }
+        else
+        {
+            //枢軸vを基準に分割する
+            v = SortHelperPartition(l, r, comparison);
+
+            //左右の部分配列のうち短いほうを先に処理をする
+            if (v - l < r - v)
+            {
+                //左部分配列を先に整列する
+                //スタックなので右左の順に積む
+                low[sp] = v + 1;
+                high[sp++] = r;
+                low[sp] = l;
+                high[sp++] = v - 1;
+            }
+            else
+            {
+                //右部分配列を先に整列する
+                //スタックなので左右の順に積む
+                low[sp] = l;
+                high[sp++] = v - 1;
+                low[sp] = v + 1;
+                high[sp++] = r;
+            }
+        }
+    }
 }
 
 //y = log2(x)

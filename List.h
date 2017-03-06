@@ -34,9 +34,10 @@ public:
     List& operator=(const List &rList);
     List& operator=(List&& rList);
 
-    TYPE* operator&() { return array; }
+    //TYPE* operator&() { return array; }
     TYPE& operator[] (int index);
 
+    TYPE* Array() { return array; }
     void Add(TYPE item);
     void Insert(int index, TYPE  item);
     int IndexOf(TYPE item);
